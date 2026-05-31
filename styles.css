@@ -26,6 +26,10 @@ body {
   overflow-x: hidden;
 }
 
+body.modal-open {
+  overflow: hidden;
+}
+
 button,
 input,
 textarea {
@@ -356,6 +360,10 @@ textarea:focus {
   padding: 20px;
 }
 
+.pro-report-body > .report-history {
+  grid-column: 2;
+}
+
 .pro-form {
   display: grid;
   gap: 16px;
@@ -441,6 +449,37 @@ textarea:focus {
   background: #ffffff;
 }
 
+.compact-button {
+  min-height: 34px;
+  padding: 0 12px;
+  border: 1px solid var(--line);
+  border-radius: 8px;
+  color: var(--navy);
+  background: #ffffff;
+  font-size: 0.82rem;
+  font-weight: 800;
+}
+
+.free-badge {
+  padding: 6px 10px;
+  border: 1px solid #ead6b5;
+  border-radius: 999px;
+  color: #6d4d10;
+  background: #fff8e8;
+  font-size: 0.78rem;
+  font-weight: 900;
+}
+
+.pro-badge {
+  padding: 6px 10px;
+  border: 1px solid #b9d9d5;
+  border-radius: 999px;
+  color: #0f5555;
+  background: #eef9f7;
+  font-size: 0.78rem;
+  font-weight: 900;
+}
+
 .report-output {
   min-height: 420px;
   border: 1px solid var(--line);
@@ -469,6 +508,50 @@ textarea:focus {
 
 .report-summary strong {
   line-height: 1.5;
+}
+
+.report-title-row {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 12px;
+}
+
+.report-id {
+  margin: 0;
+  color: var(--muted);
+  font-size: 0.84rem;
+}
+
+.free-metrics {
+  display: grid;
+  grid-template-columns: repeat(3, minmax(0, 1fr));
+  gap: 10px;
+  padding: 14px;
+  border-bottom: 1px solid var(--line);
+  background: #ffffff;
+}
+
+.free-metrics div {
+  display: grid;
+  gap: 4px;
+  min-height: 72px;
+  place-items: center;
+  border: 1px solid var(--line);
+  border-radius: 8px;
+  background: #fbfcfd;
+  text-align: center;
+}
+
+.free-metrics span {
+  color: var(--navy);
+  font-size: 1.45rem;
+  font-weight: 900;
+}
+
+.free-metrics strong {
+  color: var(--muted);
+  font-size: 0.84rem;
 }
 
 .report-grid {
@@ -516,6 +599,270 @@ textarea:focus {
 
 .report-card.docs {
   border-color: #cbd8e8;
+}
+
+.locked-card {
+  position: relative;
+  border-color: #ead6b5;
+  background: #fffaf0;
+}
+
+.locked-card span {
+  display: inline-flex;
+  margin-top: 10px;
+  padding: 5px 9px;
+  border-radius: 999px;
+  color: #6d4d10;
+  background: #f3dfba;
+  font-size: 0.76rem;
+  font-weight: 900;
+}
+
+.upgrade-box {
+  margin: 0 14px 14px;
+  padding: 14px;
+  border: 1px solid #b9d9d5;
+  border-radius: 8px;
+  background: #eef9f7;
+}
+
+.upgrade-box strong {
+  display: block;
+  margin-bottom: 6px;
+  color: #0f5555;
+}
+
+.upgrade-box p {
+  margin: 0;
+  color: var(--muted);
+  line-height: 1.62;
+}
+
+.upgrade-box button,
+.history-locked button {
+  margin-top: 12px;
+  min-height: 38px;
+  padding: 0 13px;
+  border: 0;
+  border-radius: 8px;
+  color: #ffffff;
+  background: var(--navy);
+  font-weight: 800;
+}
+
+.report-history {
+  padding: 14px;
+  border: 1px solid var(--line);
+  border-radius: 8px;
+  background: #fbfcfd;
+}
+
+.report-history h4 {
+  margin: 0;
+  font-size: 0.98rem;
+}
+
+.report-history-list {
+  display: grid;
+  gap: 8px;
+  margin-top: 12px;
+  max-height: 220px;
+  overflow: auto;
+}
+
+.report-history-list p {
+  margin: 0;
+  color: var(--muted);
+  line-height: 1.6;
+}
+
+.history-item {
+  display: grid;
+  gap: 5px;
+  width: 100%;
+  padding: 11px 12px;
+  border: 1px solid var(--line);
+  border-radius: 8px;
+  color: var(--ink);
+  background: #ffffff;
+  text-align: left;
+}
+
+.history-item:hover {
+  border-color: #b9d9d5;
+  background: #f2faf8;
+}
+
+.history-item span {
+  color: var(--teal);
+  font-size: 0.78rem;
+  font-weight: 900;
+}
+
+.history-item strong {
+  line-height: 1.4;
+}
+
+.history-item small {
+  color: var(--muted);
+  line-height: 1.35;
+}
+
+.history-locked {
+  padding: 12px;
+  border: 1px solid #ead6b5;
+  border-radius: 8px;
+  background: #fffaf0;
+}
+
+.history-locked strong {
+  display: block;
+  margin-bottom: 5px;
+  color: #6d4d10;
+}
+
+.history-locked p {
+  margin: 0;
+  color: var(--muted);
+  line-height: 1.55;
+}
+
+.modal-backdrop {
+  position: fixed;
+  inset: 0;
+  z-index: 20;
+  display: grid;
+  place-items: center;
+  padding: 24px;
+  background: rgba(18, 30, 42, 0.58);
+}
+
+.modal-backdrop[hidden] {
+  display: none;
+}
+
+.upgrade-modal {
+  position: relative;
+  width: min(760px, 100%);
+  max-height: min(780px, calc(100vh - 48px));
+  overflow: auto;
+  border: 1px solid var(--line);
+  border-radius: 8px;
+  background: #ffffff;
+  box-shadow: 0 24px 70px rgba(18, 30, 42, 0.28);
+}
+
+.modal-close {
+  position: absolute;
+  top: 14px;
+  right: 14px;
+  display: grid;
+  place-items: center;
+  width: 38px;
+  height: 38px;
+  border: 1px solid var(--line);
+  border-radius: 8px;
+  color: var(--navy);
+  background: #ffffff;
+  font-size: 1.2rem;
+}
+
+.upgrade-modal-head {
+  padding: 28px 70px 18px 28px;
+  border-bottom: 1px solid var(--line);
+  background: #f7fbfb;
+}
+
+.upgrade-modal-head .eyebrow {
+  color: var(--teal);
+  opacity: 1;
+}
+
+.upgrade-modal h2 {
+  margin-bottom: 10px;
+  font-size: 1.8rem;
+  line-height: 1.15;
+}
+
+.upgrade-modal-head p {
+  margin-bottom: 0;
+  color: var(--muted);
+  line-height: 1.65;
+}
+
+.upgrade-plan {
+  display: grid;
+  grid-template-columns: minmax(0, 1fr) auto;
+  gap: 18px;
+  align-items: center;
+  padding: 20px 28px;
+  border-bottom: 1px solid var(--line);
+}
+
+.upgrade-plan div {
+  display: grid;
+  gap: 4px;
+}
+
+.upgrade-plan span,
+.upgrade-plan small {
+  color: var(--muted);
+  font-size: 0.86rem;
+  font-weight: 700;
+}
+
+.upgrade-plan strong {
+  color: var(--navy);
+  font-size: 2rem;
+  line-height: 1;
+}
+
+.upgrade-plan button {
+  min-height: 44px;
+  padding: 0 18px;
+  border: 0;
+  border-radius: 8px;
+  color: #ffffff;
+  background: var(--navy);
+  font-weight: 900;
+}
+
+.upgrade-benefits {
+  display: grid;
+  grid-template-columns: repeat(2, minmax(0, 1fr));
+  gap: 14px;
+  padding: 20px 28px;
+}
+
+.upgrade-benefits section {
+  padding: 16px;
+  border: 1px solid var(--line);
+  border-radius: 8px;
+  background: #fbfcfd;
+}
+
+.upgrade-benefits strong {
+  display: block;
+  margin-bottom: 10px;
+}
+
+.upgrade-benefits ul {
+  margin: 0;
+  padding-left: 1.2rem;
+}
+
+.upgrade-benefits li {
+  color: var(--muted);
+  line-height: 1.65;
+}
+
+.upgrade-disclaimer {
+  margin: 0 28px 28px;
+  padding: 14px;
+  border-radius: 8px;
+  color: #62342e;
+  background: #fff0ed;
+  line-height: 1.62;
 }
 
 .workflow-list {
@@ -888,6 +1235,10 @@ footer {
     grid-template-columns: 1fr;
   }
 
+  .pro-report-body > .report-history {
+    grid-column: auto;
+  }
+
   .workflow-list {
     grid-template-columns: 1fr;
   }
@@ -940,8 +1291,15 @@ footer {
 
   .form-grid,
   .risk-checks,
-  .report-grid {
+  .report-grid,
+  .free-metrics,
+  .upgrade-plan,
+  .upgrade-benefits {
     grid-template-columns: 1fr;
+  }
+
+  .upgrade-plan button {
+    justify-self: start;
   }
 
   .hero h2 {

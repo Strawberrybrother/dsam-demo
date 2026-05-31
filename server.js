@@ -8,6 +8,9 @@ const content = require("./data/ds160-content.js");
 const host = process.env.HOST || "127.0.0.1";
 const port = Number(process.env.PORT || 4173);
 const rootDir = __dirname;
+const reportStorePath = path.join(rootDir, "data", "pro-reports.json");
+const reportStoreLimit = 30;
+let memoryReportStore = [];
 
 const mimeTypes = {
   ".html": "text/html; charset=utf-8",
@@ -112,6 +115,110 @@ function hasValue(value) {
 
 function addUnique(list, item) {
   if (!list.includes(item)) list.push(item);
+}
+
+function createReportId() {
+  const date = new Date().toISOString().slice(0, 10).replace(/-/g, "");
+  const random = Math.random().toString(36).slice(2, 8).toUpperCase();
+  return `B2-${date}-${random}`;
+}
+
+function readReportStore() {
+  if (memoryReportStore.length) return memoryReportStore;
+
+  try {
+    const body = fs.readFileSync(reportStorePath, "utf8");
+    const parsed = JSON.parse(body);
+    return Array.isArray(parsed) ? parsed : [];
+  } catch (error) {
+    return memoryReportStore;
+  }
+}
+
+function writeReportStore(reports) {
+  const limited = reports.slice(0, reportStoreLimit);
+  memoryReportStore = limited;
+  fs.writeFileSync(reportStorePath, JSON.stringify(limited, null, 2));
+}
+
+function reportSummary(record) {
+  return {
+    reportId: record.reportId,
+    generatedAt: record.generatedAt,
+    product: record.product,
+    summary: record.summary,
+    riskCount: record.riskCount,
+    fixCount: record.fixCount,
+  };
+}
+
+function hasProAccess(req, url) {
+  return url.searchParams.get("access") === "pro" || req.headers["x-ds160-pro"] === "demo";
+}
+
+function fullReportView(report) {
+  return {
+    ...report,
+    access: "pro",
+    locked: false,
+    riskCount: report.risks.length,
+    fixCount: report.fixes.length,
+    passCount: report.passed.length,
+    documentCount: report.documents.length,
+  };
+}
+
+function freeReportView(report) {
+  return {
+    reportId: report.reportId,
+    product: report.product,
+    generatedAt: report.generatedAt,
+    access: "free",
+    locked: true,
+    summary: report.summary,
+    riskCount: report.risks.length,
+    fixCount: report.fixes.length,
+    passCount: report.passed.length,
+    documentCount: report.documents.length,
+    documents: report.documents.slice(0, 3),
+    preview: {
+      risk:
+        report.risks.length > 0
+          ? "发现高风险项。完整说明、对应 DS-160 核对点和建议材料属于 Pro 报告内容。"
+          : "未发现必须立即暂停的高风险项。完整逐项核对属于 Pro 报告内容。",
+      fixes:
+        report.fixes.length > 0
+          ? `发现 ${report.fixes.length} 项需要补充或统一口径。`
+          : "当前输入未发现明显需要补充的基础信息。",
+    },
+    lockedSections: ["完整通过项", "完整修改建议", "完整高风险解释", "完整材料清单", "历史记录", "打印 / PDF"],
+    upgradeMessage: "升级 Pro 后可查看完整报告、保存历史并打印导出 PDF。",
+    disclaimer: report.disclaimer,
+  };
+}
+
+function saveReport(report, isPro = false) {
+  const storedReport = {
+    ...report,
+    reportId: createReportId(),
+  };
+  const record = {
+    reportId: storedReport.reportId,
+    generatedAt: storedReport.generatedAt,
+    product: storedReport.product,
+    summary: storedReport.summary,
+    riskCount: storedReport.risks.length,
+    fixCount: storedReport.fixes.length,
+    report: storedReport,
+  };
+  const reports = readReportStore().filter((item) => item.reportId !== record.reportId);
+  reports.unshift(record);
+  writeReportStore(reports);
+  return isPro ? fullReportView(storedReport) : freeReportView(storedReport);
+}
+
+function getStoredReport(reportId) {
+  return readReportStore().find((record) => record.reportId === reportId);
 }
 
 function buildB1B2Report(input) {
@@ -295,17 +402,77 @@ async function handleApi(req, res, url) {
   }
 
   if (url.pathname === "/api/reports/b1b2") {
-    if (req.method !== "POST") {
+    if (req.method === "GET") {
+      if (hasProAccess(req, url)) {
+        sendJson(res, 200, {
+          access: "pro",
+          locked: false,
+          count: readReportStore().length,
+          reports: readReportStore().map(reportSummary),
+        });
+        return true;
+      }
+
+      sendJson(res, 200, {
+        access: "free",
+        locked: true,
+        count: 0,
+        reports: [],
+        message: "历史记录属于 Pro 功能。升级后可查看最近报告并重新打开。",
+      });
+      return true;
+    }
+
+    if (req.method === "POST") {
+      let input;
+      try {
+        input = await readJsonBody(req);
+      } catch (error) {
+        sendJson(res, 400, { error: "Invalid JSON body" });
+        return true;
+      }
+
+      try {
+        sendJson(res, 200, saveReport(buildB1B2Report(input), hasProAccess(req, url)));
+      } catch (error) {
+        if (error.code === "EPERM" || error.code === "EACCES") {
+          const report = buildB1B2Report(input);
+          report.reportId = createReportId();
+          memoryReportStore.unshift({
+            reportId: report.reportId,
+            generatedAt: report.generatedAt,
+            product: report.product,
+            summary: report.summary,
+            riskCount: report.risks.length,
+            fixCount: report.fixes.length,
+            report,
+          });
+          memoryReportStore = memoryReportStore.slice(0, reportStoreLimit);
+          sendJson(res, 200, hasProAccess(req, url) ? fullReportView(report) : freeReportView(report));
+          return true;
+        }
+        sendJson(res, 500, { error: "Report could not be saved" });
+      }
+      return true;
+    }
+
+    sendJson(res, 405, { error: "Method Not Allowed" });
+    return true;
+  }
+
+  if (url.pathname.startsWith("/api/reports/b1b2/")) {
+    if (req.method !== "GET") {
       sendJson(res, 405, { error: "Method Not Allowed" });
       return true;
     }
 
-    try {
-      const input = await readJsonBody(req);
-      sendJson(res, 200, buildB1B2Report(input));
-    } catch (error) {
-      sendJson(res, 400, { error: "Invalid JSON body" });
+    const reportId = decodeURIComponent(url.pathname.replace("/api/reports/b1b2/", ""));
+    const record = getStoredReport(reportId);
+    if (!record) {
+      sendNotFound(res);
+      return true;
     }
+    sendJson(res, 200, hasProAccess(req, url) ? fullReportView(record.report) : freeReportView(record.report));
     return true;
   }
 

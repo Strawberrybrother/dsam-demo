@@ -190,6 +190,15 @@
             <article id="pro-report-output" class="report-output" aria-live="polite">
               <div class="empty-state">填写左侧信息后生成报告。系统只做 B1/B2 一致性核对和风险分流，不替你判断应选 Yes 或 No。</div>
             </article>
+            <aside class="report-history" aria-labelledby="report-history-title">
+              <div>
+                <p class="eyebrow">Report History</p>
+                <h4 id="report-history-title">最近报告（Pro）</h4>
+              </div>
+              <div id="report-history-list" class="report-history-list">
+                <p>暂无历史报告。</p>
+              </div>
+            </aside>
           </div>
         </section>
 
@@ -233,7 +242,49 @@
       </main>
     </div>
 
-    <script src="./data/ds160-content.js?v=b2-only"></script>
-    <script src="./app.js?v=b2-only"></script>
+    <div id="upgrade-modal" class="modal-backdrop" hidden>
+      <section class="upgrade-modal" role="dialog" aria-modal="true" aria-labelledby="upgrade-title">
+        <button class="modal-close" type="button" data-close-upgrade aria-label="关闭升级说明">×</button>
+        <div class="upgrade-modal-head">
+          <p class="eyebrow">B1/B2 Pro</p>
+          <h2 id="upgrade-title">解锁完整核对报告</h2>
+          <p>适合已经准备填写或提交 DS-160、想在面签前快速排查 B1/B2 口径冲突和高风险项的申请人。</p>
+        </div>
+        <div class="upgrade-plan">
+          <div>
+            <span>建议定价</span>
+            <strong>$9.99</strong>
+            <small>一次性报告解锁</small>
+          </div>
+          <button type="button" data-demo-unlock>模拟解锁 Pro</button>
+        </div>
+        <div class="upgrade-benefits">
+          <section>
+            <strong>Pro 解锁内容</strong>
+            <ul>
+              <li>完整通过项、修改建议和高风险解释</li>
+              <li>完整材料清单和 DS-160 页面核对方向</li>
+              <li>最近报告历史、重新打开和打印 / PDF</li>
+              <li>高风险项暂停提交提示和律师咨询提醒</li>
+            </ul>
+          </section>
+          <section>
+            <strong>不承诺的内容</strong>
+            <ul>
+              <li>不保证签证通过</li>
+              <li>不替用户编写虚假答案</li>
+              <li>不替代移民律师法律意见</li>
+              <li>不处理 B1/B2 以外签证类别</li>
+            </ul>
+          </section>
+        </div>
+        <p class="upgrade-disclaimer">
+          涉及拒签、逮捕/定罪、逾期停留、虚假陈述、身份违规或安全背景问题时，应咨询有资质的移民律师或领事馆。
+        </p>
+      </section>
+    </div>
+
+    <script src="./data/ds160-content.js?v=demo-unlock"></script>
+    <script src="./app.js?v=demo-unlock"></script>
   </body>
 </html>

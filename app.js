@@ -31,12 +31,30 @@ const workflowList = document.querySelector("#workflow-list");
 const coverageNote = document.querySelector("#coverage-note");
 const proReportForm = document.querySelector("#pro-report-form");
 const proReportOutput = document.querySelector("#pro-report-output");
+const reportHistoryList = document.querySelector("#report-history-list");
+const upgradeModal = document.querySelector("#upgrade-modal");
 
 let activeSectionId = "all";
 const enabledProfiles = new Set(["b"]);
+const proUnlockKey = "ds160-pro-demo-unlocked";
 
 let activeProfileId = "b";
 let activeField = fields[0];
+let currentReport = null;
+
+function isProUnlocked() {
+  return window.localStorage.getItem(proUnlockKey) === "true";
+}
+
+function setProUnlocked(value) {
+  window.localStorage.setItem(proUnlockKey, value ? "true" : "false");
+}
+
+function apiPath(path) {
+  if (!isProUnlocked()) return path;
+  const separator = path.includes("?") ? "&" : "?";
+  return `${path}${separator}access=pro`;
+}
 
 function normalize(value) {
   return value.toLowerCase().replace(/\s+/g, " ").trim();
@@ -366,10 +384,77 @@ function renderReportList(title, items, tone) {
   `;
 }
 
+function formatReportDate(value) {
+  if (!value) return "";
+  const date = new Date(value);
+  if (Number.isNaN(date.getTime())) return value;
+  return date.toLocaleString("zh-CN", {
+    year: "numeric",
+    month: "2-digit",
+    day: "2-digit",
+    hour: "2-digit",
+    minute: "2-digit",
+  });
+}
+
+function renderLockedSection(title, text) {
+  return `
+    <section class="report-card locked-card">
+      <strong>${title}</strong>
+      <p>${text}</p>
+      <span>Pro 解锁</span>
+    </section>
+  `;
+}
+
+function renderFreeReport(report) {
+  const documents = report.documents || [];
+  return `
+    <div class="report-summary ${report.riskCount ? "has-risk" : ""}">
+      <div class="report-title-row">
+        <span>${report.product}</span>
+        <span class="free-badge">免费预览</span>
+      </div>
+      <p class="report-id">报告编号：${report.reportId || "未保存"} · ${formatReportDate(report.generatedAt)}</p>
+      <strong>${report.summary}</strong>
+    </div>
+    <div class="free-metrics">
+      <div><span>${report.riskCount || 0}</span><strong>高风险项</strong></div>
+      <div><span>${report.fixCount || 0}</span><strong>需补充项</strong></div>
+      <div><span>${report.documentCount || documents.length}</span><strong>建议材料</strong></div>
+    </div>
+    <div class="report-grid">
+      ${renderReportList("部分材料清单", documents, "docs")}
+      ${renderReportList("免费预览提示", [report.preview?.risk, report.preview?.fixes].filter(Boolean), "fix")}
+      ${renderLockedSection("完整逐项核对", "通过项、修改建议和高风险解释需要 Pro 解锁后查看。")}
+      ${renderLockedSection("历史与导出", "报告历史、重新打开、打印 / PDF 属于 Pro 功能。")}
+    </div>
+    <div class="upgrade-box">
+      <strong>${report.upgradeMessage || "升级 Pro 后可查看完整报告。"}</strong>
+      <p>当前为开发版模拟解锁。后续接入真实支付后，会用支付回调替换本地解锁状态。</p>
+      <button type="button" data-upgrade-pro>查看 Pro 解锁内容</button>
+    </div>
+    <div class="law-note"><strong>免责声明：</strong>${report.disclaimer}</div>
+  `;
+}
+
 function renderProReport(report) {
+  currentReport = report;
+  const isPro = report.access === "pro" && !report.locked;
+
+  if (!isPro) {
+    proReportOutput.innerHTML = renderFreeReport(report);
+    return;
+  }
+
   proReportOutput.innerHTML = `
     <div class="report-summary ${report.risks.length ? "has-risk" : ""}">
-      <span>${report.product}</span>
+      <div class="report-title-row">
+        <span>${report.product}</span>
+        <span class="pro-badge">Pro 已解锁</span>
+        <button class="secondary-button compact-button" type="button" data-print-report>打印 / 导出</button>
+      </div>
+      <p class="report-id">报告编号：${report.reportId || "未保存"} · ${formatReportDate(report.generatedAt)}</p>
       <strong>${report.summary}</strong>
     </div>
     <div class="report-grid">
@@ -382,10 +467,34 @@ function renderProReport(report) {
   `;
 }
 
+function renderReportHistory(items) {
+  if (!reportHistoryList) return;
+
+  if (!items.length) {
+    reportHistoryList.innerHTML = `<p>暂无历史报告。</p>`;
+    return;
+  }
+
+  reportHistoryList.innerHTML = items
+    .map(
+      (item) => `
+        <button class="history-item" type="button" data-report-id="${item.reportId}">
+          <span>${item.reportId}</span>
+          <strong>${item.summary}</strong>
+          <small>${formatReportDate(item.generatedAt)} · 风险 ${item.riskCount} · 待补充 ${item.fixCount}</small>
+        </button>
+      `,
+    )
+    .join("");
+}
+
 async function generateProReport(payload) {
-  const response = await fetch("/api/reports/b1b2", {
+  const response = await fetch(apiPath("/api/reports/b1b2"), {
     method: "POST",
-    headers: { "content-type": "application/json" },
+    headers: {
+      "content-type": "application/json",
+      ...(isProUnlocked() ? { "x-ds160-pro": "demo" } : {}),
+    },
     body: JSON.stringify(payload),
   });
 
@@ -394,6 +503,111 @@ async function generateProReport(payload) {
   }
 
   return response.json();
+}
+
+async function loadReportHistory() {
+  if (!reportHistoryList) return;
+
+  try {
+    const response = await fetch(apiPath("/api/reports/b1b2"), {
+      headers: isProUnlocked() ? { "x-ds160-pro": "demo" } : {},
+    });
+    if (!response.ok) throw new Error("History API failed");
+    const payload = await response.json();
+    if (payload.locked) {
+      reportHistoryList.innerHTML = `
+        <div class="history-locked">
+          <strong>Pro 功能</strong>
+          <p>${payload.message || "历史记录需要升级 Pro 后使用。"}</p>
+          <button type="button" data-upgrade-pro>查看 Pro</button>
+        </div>
+      `;
+      return;
+    }
+    renderReportHistory(payload.reports || []);
+  } catch (error) {
+    reportHistoryList.innerHTML = `<p>历史记录暂时无法读取，请确认本地 Node 服务正在运行。</p>`;
+  }
+}
+
+async function loadStoredReport(reportId) {
+  const response = await fetch(apiPath(`/api/reports/b1b2/${encodeURIComponent(reportId)}`), {
+    headers: isProUnlocked() ? { "x-ds160-pro": "demo" } : {},
+  });
+  if (!response.ok) throw new Error("Stored report not found");
+  return response.json();
+}
+
+function printCurrentReport() {
+  if (!currentReport) return;
+  const printWindow = window.open("", "_blank", "width=920,height=720");
+  if (!printWindow) return;
+
+  const section = proReportOutput.innerHTML;
+  printWindow.document.write(`
+    <!doctype html>
+    <html lang="zh-CN">
+      <head>
+        <meta charset="utf-8" />
+        <title>${currentReport.reportId || "B1/B2 Pro 核对报告"}</title>
+        <style>
+          body { margin: 0; padding: 28px; color: #18212b; font-family: "Microsoft YaHei", Arial, sans-serif; }
+          button { display: none; }
+          .report-summary { padding: 16px; border: 1px solid #d9e0e7; background: #eef9f7; }
+          .report-summary.has-risk { background: #fff8e8; }
+          .report-title-row { display: flex; justify-content: space-between; gap: 12px; }
+          .report-id { color: #5b6672; font-size: 13px; }
+          .report-grid { display: grid; grid-template-columns: 1fr 1fr; gap: 12px; margin-top: 14px; }
+          .report-card { padding: 14px; border: 1px solid #d9e0e7; border-radius: 8px; }
+          .report-card strong { display: block; margin-bottom: 8px; }
+          li { margin-bottom: 6px; line-height: 1.55; }
+          .law-note { margin-top: 14px; padding: 12px; background: #fff0ed; color: #62342e; }
+          @media print { body { padding: 18px; } .report-grid { break-inside: avoid; } }
+        </style>
+      </head>
+      <body>${section}</body>
+    </html>
+  `);
+  printWindow.document.close();
+  printWindow.focus();
+  printWindow.print();
+}
+
+function openUpgradeModal() {
+  if (!upgradeModal) return;
+  const demoButton = upgradeModal.querySelector("[data-demo-unlock]");
+  if (demoButton) {
+    demoButton.textContent = isProUnlocked() ? "已模拟解锁 Pro" : "模拟解锁 Pro";
+  }
+  upgradeModal.hidden = false;
+  document.body.classList.add("modal-open");
+  const closeButton = upgradeModal.querySelector("[data-close-upgrade]");
+  if (closeButton) closeButton.focus();
+}
+
+function closeUpgradeModal() {
+  if (!upgradeModal) return;
+  upgradeModal.hidden = true;
+  document.body.classList.remove("modal-open");
+}
+
+async function unlockProDemo() {
+  setProUnlocked(true);
+  closeUpgradeModal();
+  await loadReportHistory();
+
+  if (currentReport?.reportId) {
+    proReportOutput.innerHTML = `<div class="empty-state">正在加载完整 Pro 报告...</div>`;
+    try {
+      renderProReport(await loadStoredReport(currentReport.reportId));
+      return;
+    } catch (error) {
+      proReportOutput.innerHTML = `<div class="empty-state">Pro 已模拟解锁。请重新生成报告查看完整内容。</div>`;
+      return;
+    }
+  }
+
+  proReportOutput.innerHTML = `<div class="empty-state">Pro 已模拟解锁。请填写左侧信息并生成完整核对报告。</div>`;
 }
 
 profileTabs.addEventListener("click", (event) => {
@@ -452,6 +666,7 @@ if (proReportForm) {
     try {
       const report = await generateProReport(payload);
       renderProReport(report);
+      loadReportHistory();
     } catch (error) {
       proReportOutput.innerHTML = `
         <div class="risk-box">
@@ -464,11 +679,65 @@ if (proReportForm) {
 
   proReportForm.addEventListener("reset", () => {
     window.setTimeout(() => {
+      currentReport = null;
       proReportOutput.innerHTML = `<div class="empty-state">填写左侧信息后生成报告。系统只做 B1/B2 一致性核对和风险分流，不替你判断应选 Yes 或 No。</div>`;
     }, 0);
   });
 }
 
+if (proReportOutput) {
+  proReportOutput.addEventListener("click", (event) => {
+    const upgradeButton = event.target.closest("[data-upgrade-pro]");
+    if (upgradeButton) {
+      openUpgradeModal();
+      return;
+    }
+
+    const printButton = event.target.closest("[data-print-report]");
+    if (!printButton) return;
+    printCurrentReport();
+  });
+}
+
+if (reportHistoryList) {
+  reportHistoryList.addEventListener("click", async (event) => {
+    const upgradeButton = event.target.closest("[data-upgrade-pro]");
+    if (upgradeButton) {
+      openUpgradeModal();
+      return;
+    }
+
+    const button = event.target.closest("[data-report-id]");
+    if (!button) return;
+    proReportOutput.innerHTML = `<div class="empty-state">正在读取历史报告...</div>`;
+    try {
+      renderProReport(await loadStoredReport(button.dataset.reportId));
+    } catch (error) {
+      proReportOutput.innerHTML = `<div class="risk-box"><strong>历史报告无法读取</strong><p>这份报告可能已被清理，或本地服务没有正确运行。</p></div>`;
+    }
+  });
+}
+
+if (upgradeModal) {
+  upgradeModal.addEventListener("click", (event) => {
+    if (event.target === upgradeModal || event.target.closest("[data-close-upgrade]")) {
+      closeUpgradeModal();
+      return;
+    }
+
+    if (event.target.closest("[data-demo-unlock]")) {
+      unlockProDemo();
+    }
+  });
+
+  document.addEventListener("keydown", (event) => {
+    if (event.key === "Escape" && !upgradeModal.hidden) {
+      closeUpgradeModal();
+    }
+  });
+}
+
 renderWorkflow();
 update();
+loadReportHistory();
 })();
