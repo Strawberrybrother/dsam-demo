@@ -29,9 +29,13 @@ const profileTabs = document.querySelector("#profile-tabs");
 const profileDescription = document.querySelector("#profile-description");
 const workflowList = document.querySelector("#workflow-list");
 const coverageNote = document.querySelector("#coverage-note");
+const proReportForm = document.querySelector("#pro-report-form");
+const proReportOutput = document.querySelector("#pro-report-output");
 
 let activeSectionId = "all";
-let activeProfileId = "all";
+const enabledProfiles = new Set(["b"]);
+
+let activeProfileId = "b";
 let activeField = fields[0];
 
 function normalize(value) {
@@ -95,16 +99,20 @@ function renderWorkflow() {
 function renderProfiles() {
   profileTabs.innerHTML = visaProfiles
     .map(
-      (profile) => `
-        <button class="profile-tab ${profile.id === activeProfileId ? "active" : ""}" type="button" data-profile="${profile.id}">
+      (profile) => {
+        const enabled = enabledProfiles.has(profile.id);
+        return `
+        <button class="profile-tab ${profile.id === activeProfileId ? "active" : ""} ${enabled ? "" : "locked"}" type="button" data-profile="${profile.id}" ${enabled ? "" : "disabled"} title="${enabled ? profile.description : "暂未开放"}">
           ${profile.label}
+          ${enabled ? "" : `<small>暂未开放</small>`}
         </button>
-      `,
+      `;
+      },
     )
     .join("");
 
   const active = visaProfiles.find((profile) => profile.id === activeProfileId);
-  profileDescription.textContent = active?.description || "";
+  profileDescription.textContent = active?.description || "当前仅开放 B1/B2。其他签证类别暂未开放，避免给出不确定指导。";
 }
 
 function renderSections() {
@@ -129,7 +137,7 @@ function renderFieldList() {
   }
 
   if (!filtered.length) {
-    fieldList.innerHTML = `<div class="empty-state">没有匹配字段。可以切换“全部类别/全部章节”，或在下方粘贴截图中的英文问题生成保守核对模板。</div>`;
+    fieldList.innerHTML = `<div class="empty-state">没有匹配字段。当前仅开放 B1/B2 常见字段；可以切换章节，或在下方粘贴截图中的英文问题生成保守核对模板。</div>`;
     return;
   }
 
@@ -300,16 +308,16 @@ function renderCustomTemplate(question) {
     id: "custom",
     sectionId: "all",
     name: question,
-    part: "待确认字段",
+    part: "待核对字段",
     appliesTo: ["all"],
-    condition: "你粘贴的是自定义字段文字。当前静态版无法保证该字段的官方上下文、显示条件和签证类别适用范围。",
+    condition: "你粘贴的是字段库尚未覆盖的问题。系统无法确认它的官方上下文、显示条件和签证类别适用范围。",
     sources: ["travel-faq"],
-    meaning: "未知字段只能作为核对模板处理。不要把模板当作官方字段解释；需要回到 CEAC 页面上下文确认。",
-    format: "先确认该问题所在页面、签证类别、是否有下拉项、是否允许 Does Not Apply、是否为 Optional。所有日期建议按 DD-MMM-YYYY 准备；普通文本通常应使用英文。",
+    meaning: "这是安全核对清单，不是确定答案。你需要回到 CEAC 页面上下文确认问题含义。",
+    format: "先确认该问题所在页面、签证类别、是否为 Yes/No、下拉框、日期、地址或解释文本，是否允许 Does Not Apply，是否为 Optional。普通文本通常使用英文；日期按 DD-MMM-YYYY 准备。",
     examples: [
-      "情况A：如该字段要求选择事实状态，应根据真实情况选择，不要为了提高通过率改变事实。",
-      "情况B：如该字段要求填写姓名、地址、号码或日期，应与护照、I-20、DS-2019、I-797、邀请信等文件一致。",
-      "情况C：如该字段涉及拒签、犯罪、移民违规、安全背景或虚假陈述，请先咨询移民律师。",
+      "核对1：这题是不是只问事实状态？如果是，按真实情况选择，不要为了提高通过率改变事实。",
+      "核对2：这题是不是要求填写姓名、地址、号码或日期？如果是，先对照护照、邀请信、预约信息或其他官方文件。",
+      "核对3：这题是否涉及拒签、犯罪、移民违规、安全背景或虚假陈述？如果涉及，先暂停填写并咨询移民律师或领事馆。",
     ],
     mistakes: [
       "❌ 只根据中文直觉翻译作答 → ✅ 回到英文原文和页面上下文理解。",
@@ -322,9 +330,76 @@ function renderCustomTemplate(question) {
   renderAnswer(activeField);
 }
 
+function formToPayload(form) {
+  const data = new FormData(form);
+  return {
+    travelPurpose: data.get("travelPurpose") || "",
+    intendedArrival: data.get("intendedArrival") || "",
+    stayDays: data.get("stayDays") || "",
+    usStayAddressType: data.get("usStayAddressType") || "",
+    payer: data.get("payer") || "",
+    employmentStatus: data.get("employmentStatus") || "",
+    monthlyIncome: data.get("monthlyIncome") || "",
+    passportValidMonths: data.get("passportValidMonths") || "",
+    hasPreviousUSVisa: data.get("hasPreviousUSVisa") || "no",
+    hasVisaRefusal: data.get("hasVisaRefusal") || "no",
+    hasOverstayOrViolation: data.get("hasOverstayOrViolation") || "no",
+    hasArrestOrConviction: data.get("hasArrestOrConviction") || "no",
+  };
+}
+
+function renderReportList(title, items, tone) {
+  if (!items.length) {
+    return `
+      <section class="report-card ${tone}">
+        <strong>${title}</strong>
+        <p>暂无。</p>
+      </section>
+    `;
+  }
+
+  return `
+    <section class="report-card ${tone}">
+      <strong>${title}</strong>
+      <ul>${listItems(items)}</ul>
+    </section>
+  `;
+}
+
+function renderProReport(report) {
+  proReportOutput.innerHTML = `
+    <div class="report-summary ${report.risks.length ? "has-risk" : ""}">
+      <span>${report.product}</span>
+      <strong>${report.summary}</strong>
+    </div>
+    <div class="report-grid">
+      ${renderReportList("通过项", report.passed || [], "pass")}
+      ${renderReportList("需补充 / 需统一", report.fixes || [], "fix")}
+      ${renderReportList("高风险项", report.risks || [], "risk")}
+      ${renderReportList("建议材料清单", report.documents || [], "docs")}
+    </div>
+    <div class="law-note"><strong>免责声明：</strong>${report.disclaimer}</div>
+  `;
+}
+
+async function generateProReport(payload) {
+  const response = await fetch("/api/reports/b1b2", {
+    method: "POST",
+    headers: { "content-type": "application/json" },
+    body: JSON.stringify(payload),
+  });
+
+  if (!response.ok) {
+    throw new Error("Report API failed");
+  }
+
+  return response.json();
+}
+
 profileTabs.addEventListener("click", (event) => {
   const button = event.target.closest("button[data-profile]");
   if (!button) return;
+  if (button.disabled || !enabledProfiles.has(button.dataset.profile)) return;
   activeProfileId = button.dataset.profile;
   const first = getFilteredFields()[0];
   if (first) activeField = first;
@@ -367,6 +442,32 @@ customForm.addEventListener("submit", (event) => {
   if (!value) return;
   renderCustomTemplate(value);
 });
+
+if (proReportForm) {
+  proReportForm.addEventListener("submit", async (event) => {
+    event.preventDefault();
+    const payload = formToPayload(proReportForm);
+    proReportOutput.innerHTML = `<div class="empty-state">正在生成 B1/B2 Pro 核对报告...</div>`;
+
+    try {
+      const report = await generateProReport(payload);
+      renderProReport(report);
+    } catch (error) {
+      proReportOutput.innerHTML = `
+        <div class="risk-box">
+          <strong>报告暂时无法生成</strong>
+          <p>请确认本地 Node 服务正在运行，再刷新页面重试。当前功能需要后端接口 /api/reports/b1b2。</p>
+        </div>
+      `;
+    }
+  });
+
+  proReportForm.addEventListener("reset", () => {
+    window.setTimeout(() => {
+      proReportOutput.innerHTML = `<div class="empty-state">填写左侧信息后生成报告。系统只做 B1/B2 一致性核对和风险分流，不替你判断应选 Yes 或 No。</div>`;
+    }, 0);
+  });
+}
 
 renderWorkflow();
 update();

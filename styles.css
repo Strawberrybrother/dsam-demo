@@ -111,6 +111,9 @@ h1 {
 }
 
 .profile-tab {
+  display: grid;
+  gap: 2px;
+  place-items: center;
   min-height: 38px;
   padding: 8px 10px;
   color: rgba(255, 255, 255, 0.88);
@@ -125,9 +128,23 @@ h1 {
 }
 
 .profile-tab.active,
-.profile-tab:hover {
+.profile-tab:not(:disabled):hover {
   color: var(--navy);
   background: #ffffff;
+}
+
+.profile-tab.locked,
+.profile-tab:disabled {
+  cursor: not-allowed;
+  color: rgba(255, 255, 255, 0.42);
+  border-color: rgba(255, 255, 255, 0.1);
+  background: rgba(255, 255, 255, 0.05);
+  opacity: 0.72;
+}
+
+.profile-tab small {
+  font-size: 0.68rem;
+  font-weight: 700;
 }
 
 .profile-description {
@@ -235,7 +252,8 @@ textarea:focus {
 
 .hero-copy .eyebrow,
 .panel-heading .eyebrow,
-.custom-helper .eyebrow {
+.custom-helper .eyebrow,
+.pro-report .eyebrow {
   color: var(--teal);
   opacity: 1;
 }
@@ -326,6 +344,180 @@ textarea:focus {
   box-shadow: 0 10px 28px rgba(24, 33, 43, 0.07);
 }
 
+.pro-report {
+  overflow: hidden;
+  margin-bottom: 24px;
+}
+
+.pro-report-body {
+  display: grid;
+  grid-template-columns: minmax(320px, 0.95fr) minmax(0, 1.05fr);
+  gap: 20px;
+  padding: 20px;
+}
+
+.pro-form {
+  display: grid;
+  gap: 16px;
+  align-content: start;
+}
+
+.form-grid {
+  display: grid;
+  grid-template-columns: repeat(2, minmax(0, 1fr));
+  gap: 12px;
+}
+
+.form-grid label,
+.risk-checks label {
+  display: grid;
+  gap: 7px;
+  color: var(--ink);
+  font-size: 0.88rem;
+  font-weight: 800;
+}
+
+.form-grid input,
+.form-grid select {
+  width: 100%;
+  min-width: 0;
+  min-height: 42px;
+  padding: 10px 11px;
+  color: var(--ink);
+  border: 1px solid var(--line);
+  border-radius: 8px;
+  background: #ffffff;
+  outline: none;
+}
+
+.form-grid input:focus,
+.form-grid select:focus {
+  border-color: var(--teal);
+  box-shadow: 0 0 0 3px rgba(36, 123, 123, 0.17);
+}
+
+.risk-checks {
+  display: grid;
+  grid-template-columns: repeat(2, minmax(0, 1fr));
+  gap: 10px;
+  padding: 14px;
+  border: 1px solid #ead6b5;
+  border-radius: 8px;
+  background: #fffaf0;
+}
+
+.risk-checks label {
+  display: flex;
+  align-items: flex-start;
+  gap: 8px;
+  color: #5f4520;
+  line-height: 1.45;
+}
+
+.risk-checks input {
+  flex: 0 0 auto;
+  margin-top: 2px;
+}
+
+.pro-actions {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 10px;
+}
+
+.pro-actions button {
+  min-height: 42px;
+  padding: 0 16px;
+  border: 0;
+  border-radius: 8px;
+  color: #ffffff;
+  background: var(--navy);
+  font-weight: 800;
+}
+
+.pro-actions .secondary-button {
+  color: var(--navy);
+  border: 1px solid var(--line);
+  background: #ffffff;
+}
+
+.report-output {
+  min-height: 420px;
+  border: 1px solid var(--line);
+  border-radius: 8px;
+  background: #fbfcfd;
+}
+
+.report-summary {
+  display: grid;
+  gap: 6px;
+  padding: 16px;
+  border-bottom: 1px solid var(--line);
+  background: #eef9f7;
+}
+
+.report-summary.has-risk {
+  background: #fff8e8;
+}
+
+.report-summary span {
+  color: var(--teal);
+  font-size: 0.78rem;
+  font-weight: 900;
+  text-transform: uppercase;
+}
+
+.report-summary strong {
+  line-height: 1.5;
+}
+
+.report-grid {
+  display: grid;
+  grid-template-columns: repeat(2, minmax(0, 1fr));
+  gap: 12px;
+  padding: 14px;
+}
+
+.report-card {
+  min-height: 150px;
+  padding: 14px;
+  border: 1px solid var(--line);
+  border-radius: 8px;
+  background: #ffffff;
+}
+
+.report-card strong {
+  display: block;
+  margin-bottom: 8px;
+}
+
+.report-card ul {
+  margin: 0;
+  padding-left: 1.15rem;
+}
+
+.report-card li,
+.report-card p {
+  color: var(--muted);
+  line-height: 1.62;
+}
+
+.report-card.pass {
+  border-color: #b9d9d5;
+}
+
+.report-card.fix {
+  border-color: #ead6b5;
+}
+
+.report-card.risk {
+  border-color: #e6bbb4;
+}
+
+.report-card.docs {
+  border-color: #cbd8e8;
+}
+
 .workflow-list {
   display: grid;
   grid-template-columns: repeat(5, minmax(0, 1fr));
@@ -356,7 +548,8 @@ textarea:focus {
 
 .field-browser,
 .answer-panel,
-.custom-helper {
+.custom-helper,
+.pro-report {
   border: 1px solid var(--line);
   border-radius: 8px;
   background: var(--panel);
@@ -690,7 +883,8 @@ footer {
   .hero,
   .action-strip,
   .workspace,
-  .custom-helper {
+  .custom-helper,
+  .pro-report-body {
     grid-template-columns: 1fr;
   }
 
@@ -714,6 +908,10 @@ footer {
   .answer-grid {
     grid-template-columns: 1fr;
   }
+
+  .report-output {
+    min-height: 0;
+  }
 }
 
 @media (max-width: 640px) {
@@ -735,8 +933,15 @@ footer {
 
   .hero-copy,
   .answer-panel,
-  .custom-helper {
+  .custom-helper,
+  .pro-report-body {
     padding: 18px;
+  }
+
+  .form-grid,
+  .risk-checks,
+  .report-grid {
+    grid-template-columns: 1fr;
   }
 
   .hero h2 {

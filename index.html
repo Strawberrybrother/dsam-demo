@@ -54,7 +54,7 @@
         <div class="profile-panel">
           <p class="eyebrow">Visa Profile</p>
           <div id="profile-tabs" class="profile-tabs" role="list"></div>
-          <p id="profile-description" class="profile-description"></p>
+          <p id="profile-description" class="profile-description">当前仅开放 B1/B2。其他类别暂未开放。</p>
         </div>
 
         <nav class="section-list" id="section-list" aria-label="章节列表"></nav>
@@ -103,6 +103,96 @@
           <div id="workflow-list" class="workflow-list"></div>
         </section>
 
+        <section class="pro-report" aria-labelledby="pro-report-title">
+          <div class="panel-heading">
+            <div>
+              <p class="eyebrow">B1/B2 Pro</p>
+              <h3 id="pro-report-title">B1/B2 Pro 核对报告</h3>
+            </div>
+            <span class="count-pill">Beta</span>
+          </div>
+          <div class="pro-report-body">
+            <form id="pro-report-form" class="pro-form">
+              <div class="form-grid">
+                <label>
+                  访问目的
+                  <select name="travelPurpose">
+                    <option value="">请选择</option>
+                    <option value="tourism">旅游 / 休闲</option>
+                    <option value="business">短期商务</option>
+                    <option value="family_visit">探亲访友</option>
+                    <option value="medical">医疗</option>
+                    <option value="other">其他短期访问</option>
+                  </select>
+                </label>
+                <label>
+                  预计抵达日期
+                  <input name="intendedArrival" type="text" placeholder="15-AUG-2026" />
+                </label>
+                <label>
+                  预计停留天数
+                  <input name="stayDays" type="number" min="1" max="365" placeholder="14" />
+                </label>
+                <label>
+                  在美住宿
+                  <select name="usStayAddressType">
+                    <option value="">请选择</option>
+                    <option value="hotel">酒店 / 临时住宿</option>
+                    <option value="relative_friend">亲友家</option>
+                    <option value="unknown">尚未确定</option>
+                  </select>
+                </label>
+                <label>
+                  费用承担人
+                  <select name="payer">
+                    <option value="">请选择</option>
+                    <option value="self">本人</option>
+                    <option value="parents">父母 / 家人</option>
+                    <option value="employer">雇主 / 公司</option>
+                    <option value="us_contact">美国联系人</option>
+                    <option value="other">其他</option>
+                  </select>
+                </label>
+                <label>
+                  当前状态
+                  <select name="employmentStatus">
+                    <option value="">请选择</option>
+                    <option value="employed">在职</option>
+                    <option value="self_employed">自雇 / 公司经营者</option>
+                    <option value="student">学生</option>
+                    <option value="retired">退休</option>
+                    <option value="unemployed">无业 / 待业</option>
+                  </select>
+                </label>
+                <label>
+                  月收入参考
+                  <input name="monthlyIncome" type="number" min="0" placeholder="15000" />
+                </label>
+                <label>
+                  护照剩余有效期（月）
+                  <input name="passportValidMonths" type="number" min="0" max="240" placeholder="24" />
+                </label>
+              </div>
+
+              <div class="risk-checks" aria-label="高风险核对项">
+                <label><input name="hasPreviousUSVisa" type="checkbox" value="yes" /> 有美国签证历史</label>
+                <label><input name="hasVisaRefusal" type="checkbox" value="yes" /> 曾被美国签证拒签</label>
+                <label><input name="hasOverstayOrViolation" type="checkbox" value="yes" /> 有逾期停留 / 身份违规</label>
+                <label><input name="hasArrestOrConviction" type="checkbox" value="yes" /> 有逮捕 / 犯罪 / 定罪记录</label>
+              </div>
+
+              <div class="pro-actions">
+                <button type="submit">生成 Pro 核对报告</button>
+                <button type="reset" class="secondary-button">清空</button>
+              </div>
+            </form>
+
+            <article id="pro-report-output" class="report-output" aria-live="polite">
+              <div class="empty-state">填写左侧信息后生成报告。系统只做 B1/B2 一致性核对和风险分流，不替你判断应选 Yes 或 No。</div>
+            </article>
+          </div>
+        </section>
+
         <section class="workspace" aria-label="填写助手工作区">
           <div class="field-browser">
             <div class="panel-heading">
@@ -121,17 +211,17 @@
 
         <section class="custom-helper" aria-labelledby="custom-title">
           <div>
-            <p class="eyebrow">Custom Prompt</p>
-            <h3 id="custom-title">找不到字段时</h3>
-            <p>粘贴截图里的英文问题。系统只给安全核对路径，不会把未知规则说成确定答案。</p>
+            <p class="eyebrow">Safety Check</p>
+            <h3 id="custom-title">找不到字段？先做安全核对</h3>
+            <p>粘贴 DS-160 页面上的英文问题。系统只生成核对清单，不替你编造官方规则或直接判断答案。</p>
           </div>
           <form id="custom-form">
             <textarea
               id="custom-input"
               rows="4"
-              placeholder="粘贴 DS-160 页面上的英文问题，例如：Person/Entity Paying for Your Trip"
+              placeholder="粘贴英文问题，例如：Do you have any other relatives in the United States?"
             ></textarea>
-            <button type="submit">生成参考模板</button>
+            <button type="submit">生成核对清单</button>
           </form>
         </section>
 
@@ -143,7 +233,7 @@
       </main>
     </div>
 
-    <script src="./data/ds160-content.js"></script>
-    <script src="./app.js"></script>
+    <script src="./data/ds160-content.js?v=b2-only"></script>
+    <script src="./app.js?v=b2-only"></script>
   </body>
 </html>
