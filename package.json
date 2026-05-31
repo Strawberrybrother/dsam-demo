@@ -1,0 +1,14 @@
+{
+  "name": "ds160-assistant",
+  "version": "0.1.0",
+  "private": true,
+  "description": "DS-160 field action guide with a zero-dependency Node.js backend.",
+  "scripts": {
+    "start": "node server.js",
+    "dev": "node server.js",
+    "check": "node --check server.js && node --check app.js && node --check data/ds160-content.js"
+  },
+  "engines": {
+    "node": ">=18"
+  }
+}

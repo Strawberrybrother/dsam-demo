@@ -1,0 +1,149 @@
+<!doctype html>
+<html lang="zh-CN">
+  <head>
+    <meta charset="utf-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1" />
+    <title>DS-160 填写参考助手</title>
+    <meta
+      name="description"
+      content="面向美国非移民签证 DS-160 表格的逐字段中文解释、填写示例、常见错误和风险提示。"
+    />
+    <link rel="stylesheet" href="styles.css" />
+    <script>
+      window.addEventListener("error", function (event) {
+        var panel = document.querySelector("#answer-panel");
+        if (panel) {
+          panel.innerHTML =
+            '<div class="empty-state">脚本错误：' +
+            event.message +
+            "（" +
+            event.filename +
+            ":" +
+            event.lineno +
+            "）</div>";
+        }
+      });
+    </script>
+  </head>
+  <body>
+    <div class="app-shell">
+      <aside class="sidebar" aria-label="DS-160 导航">
+        <div class="brand">
+          <div class="brand-mark" aria-hidden="true">DS</div>
+          <div>
+            <p class="eyebrow">Nonimmigrant Visa</p>
+            <h1>DS-160 填写参考助手</h1>
+          </div>
+        </div>
+
+        <div class="search-panel">
+          <label for="field-search">输入字段英文、截图文字或关键词</label>
+          <div class="search-row">
+            <input
+              id="field-search"
+              type="search"
+              autocomplete="off"
+              placeholder="例如 Have you ever been refused..."
+            />
+            <button id="clear-search" class="icon-button" type="button" aria-label="清空搜索" title="清空搜索">
+              ×
+            </button>
+          </div>
+        </div>
+
+        <div class="profile-panel">
+          <p class="eyebrow">Visa Profile</p>
+          <div id="profile-tabs" class="profile-tabs" role="list"></div>
+          <p id="profile-description" class="profile-description"></p>
+        </div>
+
+        <nav class="section-list" id="section-list" aria-label="章节列表"></nav>
+      </aside>
+
+      <main class="content">
+        <section class="hero" aria-labelledby="page-title">
+          <div class="hero-copy">
+            <p class="eyebrow">DS-160 Action Guide</p>
+            <h2 id="page-title">按字段告诉你怎么填、怎么走</h2>
+            <p>先选签证类别，再点字段。每个字段优先给操作步骤、填写口径、材料核对和风险分流。</p>
+          </div>
+          <img src="assets/ds160-desk.png" alt="护照、申请表和电脑组成的签证申请工作台" />
+        </section>
+
+        <section class="action-strip" aria-label="使用步骤">
+          <div class="action-step">
+            <span>1</span>
+            <strong>选类别</strong>
+            <p>B、F/J/M、H/L/O/P/R 等字段会不同。</p>
+          </div>
+          <div class="action-step">
+            <span>2</span>
+            <strong>找字段</strong>
+            <p>按章节点选，或粘贴英文问题关键词。</p>
+          </div>
+          <div class="action-step">
+            <span>3</span>
+            <strong>照情况填</strong>
+            <p>先看“怎么填”，再核对护照和支持文件。</p>
+          </div>
+          <div class="action-step urgent">
+            <span>!</span>
+            <strong>高风险先停</strong>
+            <p>拒签、逮捕、逾期、虚假陈述先咨询专业人士。</p>
+          </div>
+        </section>
+
+        <section class="official-strip" aria-label="官方流程要点">
+          <div class="panel-heading">
+            <div>
+              <p class="eyebrow">CEAC Reality Check</p>
+              <h3>开始填写前先记住</h3>
+            </div>
+          </div>
+          <div id="workflow-list" class="workflow-list"></div>
+        </section>
+
+        <section class="workspace" aria-label="填写助手工作区">
+          <div class="field-browser">
+            <div class="panel-heading">
+              <div>
+                <p class="eyebrow">Field Library</p>
+                <h3>常见字段库</h3>
+              </div>
+              <span id="result-count" class="count-pill">0</span>
+            </div>
+            <p class="coverage-note" id="coverage-note"></p>
+            <div id="field-list" class="field-list"></div>
+          </div>
+
+          <article class="answer-panel" id="answer-panel" aria-live="polite"></article>
+        </section>
+
+        <section class="custom-helper" aria-labelledby="custom-title">
+          <div>
+            <p class="eyebrow">Custom Prompt</p>
+            <h3 id="custom-title">找不到字段时</h3>
+            <p>粘贴截图里的英文问题。系统只给安全核对路径，不会把未知规则说成确定答案。</p>
+          </div>
+          <form id="custom-form">
+            <textarea
+              id="custom-input"
+              rows="4"
+              placeholder="粘贴 DS-160 页面上的英文问题，例如：Person/Entity Paying for Your Trip"
+            ></textarea>
+            <button type="submit">生成参考模板</button>
+          </form>
+        </section>
+
+        <footer>
+          <p>
+            本工具仅供 DS-160 填写理解与准备参考，不构成法律意见。涉及拒签、犯罪记录、移民违规、虚假陈述、身份失效或安全背景问题时，请咨询有资质的移民律师或领事馆。
+          </p>
+        </footer>
+      </main>
+    </div>
+
+    <script src="./data/ds160-content.js"></script>
+    <script src="./app.js"></script>
+  </body>
+</html>
