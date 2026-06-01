@@ -348,6 +348,57 @@ textarea:focus {
   box-shadow: 0 10px 28px rgba(24, 33, 43, 0.07);
 }
 
+.user-guide {
+  overflow: hidden;
+  margin-bottom: 24px;
+  border: 1px solid var(--line);
+  border-radius: 8px;
+  background: var(--panel);
+  box-shadow: 0 10px 28px rgba(24, 33, 43, 0.07);
+}
+
+.guide-grid {
+  display: grid;
+  grid-template-columns: repeat(3, minmax(0, 1fr));
+}
+
+.guide-grid article {
+  display: grid;
+  grid-template-columns: 36px minmax(0, 1fr);
+  gap: 4px 12px;
+  align-items: start;
+  min-height: 136px;
+  padding: 18px;
+  border-top: 1px solid var(--line);
+  border-right: 1px solid var(--line);
+}
+
+.guide-grid article:last-child {
+  border-right: 0;
+}
+
+.guide-grid span {
+  grid-row: span 2;
+  display: grid;
+  place-items: center;
+  width: 34px;
+  height: 34px;
+  border-radius: 8px;
+  color: #ffffff;
+  background: var(--teal);
+  font-weight: 900;
+}
+
+.guide-grid strong {
+  line-height: 1.25;
+}
+
+.guide-grid p {
+  margin: 0;
+  color: var(--muted);
+  line-height: 1.58;
+}
+
 .pro-report {
   overflow: hidden;
   margin-bottom: 24px;
@@ -1174,6 +1225,41 @@ textarea:focus {
   line-height: 1.7;
 }
 
+.policy-panel {
+  display: grid;
+  grid-template-columns: repeat(2, minmax(0, 1fr));
+  gap: 16px;
+  margin-top: 24px;
+}
+
+.policy-card {
+  padding: 20px;
+  border: 1px solid var(--line);
+  border-radius: 8px;
+  background: #ffffff;
+  box-shadow: 0 10px 28px rgba(24, 33, 43, 0.07);
+}
+
+.policy-card .eyebrow {
+  color: var(--teal);
+  opacity: 1;
+}
+
+.policy-card h3 {
+  margin-bottom: 12px;
+  font-size: 1.05rem;
+}
+
+.policy-card ul {
+  margin: 0;
+  padding-left: 1.2rem;
+}
+
+.policy-card li {
+  color: var(--muted);
+  line-height: 1.68;
+}
+
 #custom-form {
   display: grid;
   gap: 12px;
@@ -1229,8 +1315,10 @@ footer {
 
   .hero,
   .action-strip,
+  .guide-grid,
   .workspace,
   .custom-helper,
+  .policy-panel,
   .pro-report-body {
     grid-template-columns: 1fr;
   }
@@ -1244,6 +1332,11 @@ footer {
   }
 
   .workflow-item {
+    min-height: 0;
+    border-right: 0;
+  }
+
+  .guide-grid article {
     min-height: 0;
     border-right: 0;
   }

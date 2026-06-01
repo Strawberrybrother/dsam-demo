@@ -55,24 +55,26 @@ function filterFields(searchParams) {
   const section = searchParams.get("section") || "all";
   const query = normalizeText(searchParams.get("q"));
 
-  return content.fields.filter((field) => {
-    const inProfile = fieldMatchesProfile(field, profile);
-    const inSection = section === "all" || field.sectionId === section;
-    const haystack = normalizeText(
-      [
-        field.id,
-        field.name,
-        field.part,
-        field.condition,
-        field.format,
-        field.meaning,
-        field.examples.join(" "),
-        field.mistakes.join(" "),
-      ].join(" "),
-    );
+  return content.fields
+    .filter((field) => {
+      const inProfile = fieldMatchesProfile(field, profile);
+      const inSection = section === "all" || field.sectionId === section;
+      const haystack = normalizeText(
+        [
+          field.id,
+          field.name,
+          field.part,
+          field.condition,
+          field.format,
+          field.meaning,
+          field.examples.join(" "),
+          field.mistakes.join(" "),
+        ].join(" "),
+      );
 
-    return inProfile && inSection && (!query || haystack.includes(query));
-  });
+      return inProfile && inSection && (!query || haystack.includes(query));
+    })
+    .sort((a, b) => (a.order || 99999) - (b.order || 99999));
 }
 
 function readJsonBody(req) {
@@ -236,6 +238,40 @@ function buildB1B2Report(input) {
     fixes.push("补充访问目的：旅游、商务、探亲访友、医疗或其他短期访问目的需要和 DS-160 选择项一致。");
   }
 
+  if (input.travelPurpose === "tourism") {
+    addUnique(documents, "城市行程、活动安排或旅行计划");
+    if (input.usContactRelationship && input.usContactRelationship !== "none") {
+      fixes.push("旅游目的下如填写美国联系人，需解释联系人角色，避免 U.S. Contact 与访问目的看起来不一致。");
+    }
+  }
+
+  if (input.travelPurpose === "business") {
+    addUnique(documents, "商务邀请函、会议/展会信息或公司派遣说明");
+    if (input.payer && input.payer !== "employer" && input.payer !== "self") {
+      fixes.push("短期商务访问通常需要核对费用承担人与公司派遣、邀请方或本人支付口径是否一致。");
+    }
+    if (input.usContactRelationship && input.usContactRelationship !== "business") {
+      fixes.push("商务目的下，美国联系人建议与邀请公司、会议方或商务联系人口径一致。");
+    }
+  }
+
+  if (input.travelPurpose === "family_visit") {
+    addUnique(documents, "邀请信、邀请人身份证明或亲属/朋友关系说明");
+    if (input.hasUSContact === "no" || input.usContactRelationship === "none") {
+      fixes.push("探亲访友目的通常应核对 U.S. Contact 与邀请人/住宿地址是否一致。");
+    }
+  }
+
+  if (input.travelPurpose === "medical") {
+    addUnique(documents, "美国医疗机构预约/诊断材料、治疗费用估算和资金证明");
+    if (input.usContactRelationship && input.usContactRelationship !== "medical") {
+      fixes.push("医疗目的下，美国联系人通常应与医院、医生或医疗机构信息相互对应。");
+    }
+    if (input.payer === "us_contact") {
+      risks.push("医疗访问由美国联系人支付费用时，需要非常清楚的资金承担和治疗安排说明，建议先咨询专业人士。");
+    }
+  }
+
   if (hasValue(input.intendedArrival)) {
     passed.push("已填写预计抵达日期。DS-160 日期建议按 DD-MMM-YYYY 准备，例如 15-AUG-2026。");
   } else {
@@ -262,6 +298,43 @@ function buildB1B2Report(input) {
     fixes.push("住宿地址尚不明确。DS-160 常见做法是填写计划住宿地址或临时地址，并保持真实可解释。");
   } else {
     fixes.push("补充在美停留地址类型，便于核对 Address Where You Will Stay in the U.S.");
+  }
+
+  if (input.hasUSContact === "yes") {
+    passed.push("已标记有美国联系人，需核对 U.S. Contact、在美地址、邀请/关系材料是否一致。");
+    if (!input.usContactRelationship) {
+      fixes.push("补充美国联系人关系，便于判断是亲属、朋友、商务方还是医疗机构。");
+    }
+  } else if (input.hasUSContact === "no") {
+    if (input.usStayAddressType === "relative_friend" || input.travelPurpose === "family_visit") {
+      fixes.push("住亲友家或探亲访友但没有美国联系人，容易产生口径冲突；需重新核对 U.S. Contact 页面。");
+    } else {
+      passed.push("没有特定美国联系人时，需准备酒店、行程或可解释的临时联系信息。");
+    }
+  } else {
+    fixes.push("补充是否有美国联系人，用于核对 U.S. Contact Information 页面。");
+  }
+
+  if (input.invitationStatus === "ready") {
+    passed.push("已准备邀请/证明材料，需核对姓名、地址、日期和访问目的。");
+  } else if (input.invitationStatus === "pending") {
+    fixes.push("邀请/证明材料准备中，提交前需确认信息与 DS-160 完全一致。");
+  } else if (input.invitationStatus === "none") {
+    if (["business", "family_visit", "medical"].includes(input.travelPurpose)) {
+      risks.push("商务、探亲访友或医疗目的缺少邀请/证明材料会增加解释压力，建议先补齐材料。");
+    } else {
+      fixes.push("如无邀请材料，需确保行程、住宿和资金材料足以解释短期访问目的。");
+    }
+  }
+
+  if (input.tripSpecificity === "specific") {
+    passed.push("行程城市和日期较明确，需与预计抵达日期、停留天数和住宿城市一致。");
+  } else if (input.tripSpecificity === "rough") {
+    fixes.push("行程仍较粗略，建议至少准备主要城市、停留天数和住宿安排，避免面签口径松散。");
+  } else if (input.tripSpecificity === "unclear") {
+    risks.push("行程目的和安排不清楚会削弱 B1/B2 短期访问解释，建议先完善计划再提交。");
+  } else {
+    fixes.push("补充行程确定度，便于核对 Travel Information 和面签回答。");
   }
 
   if (input.payer === "self") {
@@ -293,6 +366,29 @@ function buildB1B2Report(input) {
     fixes.push("无业/待业状态需要更谨慎核对资金来源、旅行目的和回国约束材料。");
   } else {
     fixes.push("补充当前工作/学习状态，便于核对 Present Work/Education/Training 页面。");
+  }
+
+  if (input.homeTies === "strong") {
+    passed.push("国内工作/学习/家庭/资产等约束材料较完整，可支撑短期访问后返回的口径。");
+  } else if (input.homeTies === "some") {
+    fixes.push("国内约束材料只有部分准备，建议补充工作/学习、家庭、资产或长期居住证明等材料。");
+  } else if (input.homeTies === "weak") {
+    risks.push("国内约束材料较少时，B1/B2 短期访问解释压力会更高，建议先完善支持材料。");
+  } else {
+    fixes.push("补充国内约束材料情况，用于核对 B1/B2 短期访问后返回的合理性。");
+  }
+
+  if (input.travelCompanions === "family") {
+    addUnique(documents, "同行家人的护照/签证信息和关系材料");
+    passed.push("与家人同行时，需核对同行人信息、关系和行程是否一致。");
+  } else if (input.travelCompanions === "business") {
+    addUnique(documents, "同行同事/商务团队说明");
+    fixes.push("商务团队同行时，需核对公司派遣、会议安排和同行人关系。");
+  } else if (input.travelCompanions === "group") {
+    addUnique(documents, "旅行团行程单或报名确认");
+    passed.push("旅行团出行时，需核对团期、城市、停留天数和付款记录。");
+  } else if (!input.travelCompanions) {
+    fixes.push("补充同行人情况，避免 Travel Companions 页面遗漏。");
   }
 
   if (income > 0) {

@@ -78,27 +78,29 @@ function fieldAppliesToProfile(field) {
 
 function getFilteredFields() {
   const query = normalize(searchInput.value);
-  return fields.filter((field) => {
-    const inSection = activeSectionId === "all" || field.sectionId === activeSectionId;
-    const inProfile = fieldAppliesToProfile(field);
-    const sourceText = field.sources
-      .map((sourceId) => sourceById(sourceId)?.label || "")
-      .join(" ");
-    const haystack = normalize(
-      [
-        field.name,
-        field.part,
-        field.condition,
-        field.meaning,
-        field.format,
-        field.examples.join(" "),
-        field.mistakes.join(" "),
-        sectionById(field.sectionId)?.label || "",
-        sourceText,
-      ].join(" "),
-    );
-    return inSection && inProfile && (!query || haystack.includes(query));
-  });
+  return fields
+    .filter((field) => {
+      const inSection = activeSectionId === "all" || field.sectionId === activeSectionId;
+      const inProfile = fieldAppliesToProfile(field);
+      const sourceText = field.sources
+        .map((sourceId) => sourceById(sourceId)?.label || "")
+        .join(" ");
+      const haystack = normalize(
+        [
+          field.name,
+          field.part,
+          field.condition,
+          field.meaning,
+          field.format,
+          field.examples.join(" "),
+          field.mistakes.join(" "),
+          sectionById(field.sectionId)?.label || "",
+          sourceText,
+        ].join(" "),
+      );
+      return inSection && inProfile && (!query || haystack.includes(query));
+    })
+    .sort((a, b) => (a.order || 99999) - (b.order || 99999));
 }
 
 function renderWorkflow() {
@@ -359,6 +361,12 @@ function formToPayload(form) {
     employmentStatus: data.get("employmentStatus") || "",
     monthlyIncome: data.get("monthlyIncome") || "",
     passportValidMonths: data.get("passportValidMonths") || "",
+    hasUSContact: data.get("hasUSContact") || "",
+    usContactRelationship: data.get("usContactRelationship") || "",
+    invitationStatus: data.get("invitationStatus") || "",
+    tripSpecificity: data.get("tripSpecificity") || "",
+    travelCompanions: data.get("travelCompanions") || "",
+    homeTies: data.get("homeTies") || "",
     hasPreviousUSVisa: data.get("hasPreviousUSVisa") || "no",
     hasVisaRefusal: data.get("hasVisaRefusal") || "no",
     hasOverstayOrViolation: data.get("hasOverstayOrViolation") || "no",
@@ -661,7 +669,7 @@ if (proReportForm) {
   proReportForm.addEventListener("submit", async (event) => {
     event.preventDefault();
     const payload = formToPayload(proReportForm);
-    proReportOutput.innerHTML = `<div class="empty-state">正在生成 B1/B2 Pro 核对报告...</div>`;
+    proReportOutput.innerHTML = `<div class="empty-state">正在生成 B1/B2 核对预览...</div>`;
 
     try {
       const report = await generateProReport(payload);

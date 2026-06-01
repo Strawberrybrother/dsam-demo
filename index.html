@@ -103,6 +103,32 @@
           <div id="workflow-list" class="workflow-list"></div>
         </section>
 
+        <section class="user-guide" aria-labelledby="user-guide-title">
+          <div class="panel-heading">
+            <div>
+              <p class="eyebrow">Quick Guide</p>
+              <h3 id="user-guide-title">怎么使用这个工具</h3>
+            </div>
+          </div>
+          <div class="guide-grid">
+            <article>
+              <span>1</span>
+              <strong>先找字段</strong>
+              <p>在左侧搜索 DS-160 英文问题，或按章节点击字段，查看怎么填、常见错误和材料核对。</p>
+            </article>
+            <article>
+              <span>2</span>
+              <strong>生成免费预览</strong>
+              <p>填写 B1/B2 核对表，系统会给出风险数量、需补充数量和部分建议材料。</p>
+            </article>
+            <article>
+              <span>3</span>
+              <strong>高风险先暂停</strong>
+              <p>如果涉及拒签、逾期、逮捕/定罪、虚假陈述或身份违规，请先咨询移民律师或领事馆。</p>
+            </article>
+          </div>
+        </section>
+
         <section class="pro-report" aria-labelledby="pro-report-title">
           <div class="panel-heading">
             <div>
@@ -172,6 +198,65 @@
                   护照剩余有效期（月）
                   <input name="passportValidMonths" type="number" min="0" max="240" placeholder="24" />
                 </label>
+                <label>
+                  美国联系人
+                  <select name="hasUSContact">
+                    <option value="">请选择</option>
+                    <option value="no">没有特定联系人</option>
+                    <option value="yes">有美国联系人</option>
+                  </select>
+                </label>
+                <label>
+                  联系人关系
+                  <select name="usContactRelationship">
+                    <option value="">请选择</option>
+                    <option value="none">不适用</option>
+                    <option value="family">亲属</option>
+                    <option value="friend">朋友</option>
+                    <option value="business">商务联系人 / 公司</option>
+                    <option value="medical">医院 / 医生</option>
+                    <option value="other">其他</option>
+                  </select>
+                </label>
+                <label>
+                  邀请/证明材料
+                  <select name="invitationStatus">
+                    <option value="">请选择</option>
+                    <option value="not_needed">不需要</option>
+                    <option value="ready">已有</option>
+                    <option value="pending">准备中</option>
+                    <option value="none">没有</option>
+                  </select>
+                </label>
+                <label>
+                  行程确定度
+                  <select name="tripSpecificity">
+                    <option value="">请选择</option>
+                    <option value="specific">城市/日期较明确</option>
+                    <option value="rough">只有大致计划</option>
+                    <option value="unclear">还不清楚</option>
+                  </select>
+                </label>
+                <label>
+                  同行人
+                  <select name="travelCompanions">
+                    <option value="">请选择</option>
+                    <option value="alone">独自出行</option>
+                    <option value="family">与家人同行</option>
+                    <option value="friends">与朋友同行</option>
+                    <option value="business">与同事/商务团队同行</option>
+                    <option value="group">旅行团</option>
+                  </select>
+                </label>
+                <label>
+                  国内约束材料
+                  <select name="homeTies">
+                    <option value="">请选择</option>
+                    <option value="strong">工作/学习/家庭/资产较完整</option>
+                    <option value="some">有部分材料</option>
+                    <option value="weak">暂时较少</option>
+                  </select>
+                </label>
               </div>
 
               <div class="risk-checks" aria-label="高风险核对项">
@@ -182,7 +267,7 @@
               </div>
 
               <div class="pro-actions">
-                <button type="submit">生成 Pro 核对报告</button>
+                <button type="submit">生成免费核对预览</button>
                 <button type="reset" class="secondary-button">清空</button>
               </div>
             </form>
@@ -232,6 +317,29 @@
             ></textarea>
             <button type="submit">生成核对清单</button>
           </form>
+        </section>
+
+        <section class="policy-panel" aria-labelledby="privacy-title">
+          <div class="policy-card">
+            <p class="eyebrow">Privacy</p>
+            <h3 id="privacy-title">隐私说明</h3>
+            <ul>
+              <li>当前轻量版不要求登录注册，不收集账户密码。</li>
+              <li>免费预览只返回摘要、数量和部分材料清单，不把完整报告暴露给免费接口。</li>
+              <li>本地演示版报告历史保存于项目内 JSON 文件，正式上线前应改为可清理、可删除的存储策略。</li>
+              <li>请不要在本工具中输入护照号码、身份证号码、银行账号、完整住址等高度敏感信息。</li>
+            </ul>
+          </div>
+          <div class="policy-card">
+            <p class="eyebrow">Disclaimer</p>
+            <h3>免责声明</h3>
+            <ul>
+              <li>本工具仅用于 DS-160 B1/B2 填写准备和一致性核对，不构成法律意见。</li>
+              <li>本工具不保证签证获批，不替用户选择 Yes/No，不替用户编写虚假陈述。</li>
+              <li>涉及拒签、逮捕/定罪、逾期停留、虚假陈述、身份违规或安全背景问题时，请咨询有资质的移民律师或领事馆。</li>
+              <li>DS-160 官方表格和领事馆政策可能变化，提交前应以 CEAC 和领事馆官方信息为准。</li>
+            </ul>
+          </div>
         </section>
 
         <footer>
@@ -284,7 +392,7 @@
       </section>
     </div>
 
-    <script src="./data/ds160-content.js?v=demo-unlock"></script>
-    <script src="./app.js?v=demo-unlock"></script>
+    <script src="./data/ds160-content.js?v=travel-order-fields"></script>
+    <script src="./app.js?v=personal2-fields"></script>
   </body>
 </html>
